@@ -8,14 +8,18 @@
     <style>
         :root {
             color-scheme: dark;
-            --bg: #0c0f14;
-            --panel: rgba(255, 255, 255, 0.08);
-            --panel-border: rgba(255, 255, 255, 0.14);
-            --text: #f6f8fb;
-            --muted: #a9b4c3;
-            --accent: #32d583;
-            --accent-strong: #12b76a;
-            --ring: rgba(50, 213, 131, 0.28);
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-raised: #27272a;
+            --border: #3f3f46;
+            --text: #fafafa;
+            --muted: #a1a1aa;
+            --accent: #22c55e;
+            --accent-dim: rgba(34, 197, 94, 0.15);
+            --error: #ef4444;
+            --error-dim: rgba(239, 68, 68, 0.12);
+            --error-border: rgba(239, 68, 68, 0.35);
+            --radius: 12px;
         }
 
         * {
@@ -25,115 +29,236 @@
         body {
             min-height: 100vh;
             margin: 0;
-            padding: 48px 20px;
-            display: grid;
-            place-items: start center;
-            background:
-                radial-gradient(circle at top left, rgba(50, 213, 131, 0.18), transparent 32rem),
-                radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.16), transparent 30rem),
-                var(--bg);
+            padding: 32px 16px 48px;
+            background: var(--bg);
             color: var(--text);
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background-image: linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-            background-size: 42px 42px;
-            mask-image: linear-gradient(to bottom, black, transparent 80%);
+        .app {
+            width: min(720px, 100%);
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        h1 {
-            width: min(960px, 100%);
-            margin: 0 0 24px;
-            font-size: clamp(2.5rem, 8vw, 5.5rem);
-            line-height: 0.9;
-            text-align: center;
-            letter-spacing: 0;
-            text-wrap: balance;
+        header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        h1::after {
-            content: "100 boxes waiting for a click";
-            display: block;
-            margin-top: 16px;
+        header h1 {
+            margin: 0;
+            font-size: clamp(1.75rem, 5vw, 2.25rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            margin: 0;
             color: var(--muted);
-            font-size: clamp(0.95rem, 2vw, 1.15rem);
-            font-weight: 500;
-            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        #alert {
+            display: none;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--error-border);
+            background: var(--error-dim);
+            color: #fecaca;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            animation: slideIn 220ms ease;
+        }
+
+        #alert.visible {
+            display: flex;
+        }
+
+        #alert-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            margin-top: 1px;
+        }
+
+        #alert-message {
+            flex: 1;
+        }
+
+        #alert-dismiss {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: #fca5a5;
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 150ms ease;
+        }
+
+        #alert-dismiss:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .stats-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .stats-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--surface-raised);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent), #4ade80);
+            transition: width 300ms ease;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-right: 6px;
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        .status-dot.disconnected {
+            background: var(--error);
+            box-shadow: 0 0 8px var(--error);
         }
 
         #container {
-            width: min(960px, 100%);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
-            gap: 12px;
-            padding: 24px;
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            background: var(--panel);
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(18px);
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
         }
 
         input[type="checkbox"] {
             width: 100%;
             aspect-ratio: 1;
             margin: 0;
-            display: grid;
-            place-content: center;
             appearance: none;
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.07);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            background: var(--surface-raised);
             cursor: pointer;
-            transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+            transition: border-color 150ms ease, background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+            position: relative;
         }
 
-        input[type="checkbox"]::before {
-            content: "";
-            width: 45%;
-            height: 45%;
-            border-radius: 4px;
-            transform: scale(0);
-            background: white;
-            transition: transform 160ms ease;
+        input[type="checkbox"]::after {
+            content: "✓";
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: transparent;
+            transition: color 150ms ease;
         }
 
-        input[type="checkbox"]:hover {
-            transform: translateY(-2px);
-            border-color: rgba(50, 213, 131, 0.55);
-            background: rgba(255, 255, 255, 0.11);
+        input[type="checkbox"]:hover:not(:disabled) {
+            border-color: var(--accent);
+            transform: scale(1.06);
         }
 
         input[type="checkbox"]:focus-visible {
-            outline: 3px solid var(--ring);
-            outline-offset: 3px;
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         input[type="checkbox"]:checked {
-            border-color: transparent;
-            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-            box-shadow: 0 12px 24px rgba(18, 183, 106, 0.22);
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
         }
 
-        input[type="checkbox"]:checked::before {
-            transform: scale(1);
+        input[type="checkbox"]:checked::after {
+            color: var(--accent);
         }
 
-        @media (max-width: 560px) {
-            body {
-                padding: 32px 14px;
+        input[type="checkbox"]:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #container.cooldown input[type="checkbox"] {
+            opacity: 0.75;
+        }
+
+        #cooldown-hint {
+            font-size: 0.85rem;
+            color: #fca5a5;
+        }
+
+        #cooldown-hint:empty {
+            display: none;
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
             }
 
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 480px) {
             #container {
-                grid-template-columns: repeat(auto-fit, minmax(34px, 1fr));
-                gap: 8px;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 6px;
                 padding: 14px;
             }
         }
@@ -141,38 +266,217 @@
 </head>
 
 <body>
-    <h1>Checkboxes</h1>
-    <div id="container"></div>
+    <div class="app">
+        <header>
+            <h1>Checkbox Grid</h1>
+            <p>Toggle any box — changes sync live across all connected clients.</p>
+        </header>
+
+        <div id="alert" role="alert" aria-live="assertive">
+            <svg id="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 00-.75.75v3.5a.75.75 0 001.5 0v-3.5A.75.75 0 0010 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd" />
+            </svg>
+            <span id="alert-message"></span>
+            <button id="alert-dismiss" type="button" aria-label="Dismiss alert">&times;</button>
+        </div>
+
+        <div class="stats-bar">
+            <div>
+                <div class="stats-label">Checked</div>
+                <div class="stats-value"><span id="checked-count">0</span> / <span id="total-count">100</span></div>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="stats-label">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="connection-status">Connecting…</span>
+                <span id="cooldown-hint"></span>
+            </div>
+        </div>
+
+        <div id="container">
+            <div class="loading">Loading checkboxes…</div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
-        const container = document.getElementById("container");
-        const CHECKBOX_COUNT = 100;
-        socket.on("server:checkbox:change", data => {
-            console.log(`Socket Server Event`, data);
-            const { index, checked } = data;
+        const COOLDOWN_STORAGE_KEY = "checkbox-cooldown-until";
+        const CLIENT_ID_STORAGE_KEY = "checkbox-client-id";
 
+        function getClientId() {
+            let clientId = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+            if (!clientId) {
+                clientId = crypto.randomUUID();
+                localStorage.setItem(CLIENT_ID_STORAGE_KEY, clientId);
+            }
+            return clientId;
+        }
+
+        const socket = io({ auth: { clientId: getClientId() } });
+        const container = document.getElementById("container");
+        const alertEl = document.getElementById("alert");
+        const alertMessageEl = document.getElementById("alert-message");
+        const alertDismissEl = document.getElementById("alert-dismiss");
+        const checkedCountEl = document.getElementById("checked-count");
+        const totalCountEl = document.getElementById("total-count");
+        const progressFillEl = document.getElementById("progress-fill");
+        const statusDotEl = document.getElementById("status-dot");
+        const connectionStatusEl = document.getElementById("connection-status");
+        const cooldownHintEl = document.getElementById("cooldown-hint");
+
+        const CHECKBOX_COUNT = 100;
+        const COOLDOWN_MS = 6000;
+        let cooldownUntil = Number(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
+        let pendingToggle = null;
+
+        totalCountEl.textContent = CHECKBOX_COUNT;
+
+        function showAlert(message) {
+            alertMessageEl.textContent = message || "Something went wrong.";
+            alertEl.classList.add("visible");
+        }
+
+        function hideAlert() {
+            alertEl.classList.remove("visible");
+        }
+
+        alertDismissEl.addEventListener("click", hideAlert);
+
+        function isOnCooldown() {
+            return Date.now() < cooldownUntil;
+        }
+
+        function persistCooldown() {
+            if (cooldownUntil && isOnCooldown()) {
+                localStorage.setItem(COOLDOWN_STORAGE_KEY, String(cooldownUntil));
+                return;
+            }
+
+            cooldownUntil = 0;
+            localStorage.removeItem(COOLDOWN_STORAGE_KEY);
+        }
+
+        function syncCooldownUI() {
+            if (cooldownUntil && Date.now() >= cooldownUntil) {
+                cooldownUntil = 0;
+                localStorage.removeItem(COOLDOWN_STORAGE_KEY);
+            }
+
+            const active = isOnCooldown();
+            container.classList.toggle("cooldown", active);
+
+            if (!active) {
+                cooldownHintEl.textContent = "";
+                return;
+            }
+
+            const secondsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
+            cooldownHintEl.textContent = ` · wait ${secondsLeft}s`;
+        }
+
+        function startCooldown(retryAfter) {
+            cooldownUntil = Math.max(cooldownUntil, retryAfter ?? Date.now() + COOLDOWN_MS);
+            persistCooldown();
+            syncCooldownUI();
+        }
+
+        syncCooldownUI();
+
+        function updateStats() {
+            const inputs = container.querySelectorAll('input[type="checkbox"]');
+            const checked = [...inputs].filter((el) => el.checked).length;
+            checkedCountEl.textContent = checked;
+            progressFillEl.style.width = `${(checked / CHECKBOX_COUNT) * 100}%`;
+        }
+
+        function setConnectionStatus(connected) {
+            statusDotEl.classList.toggle("disconnected", !connected);
+            connectionStatusEl.textContent = connected ? "Live" : "Disconnected";
+        }
+
+        socket.on("connect", () => setConnectionStatus(true));
+        socket.on("disconnect", () => setConnectionStatus(false));
+
+        socket.on("server:checkbox:change", (data) => {
+            const { index, checked } = data;
             const input = document.getElementById(`checkbox-${index}`);
-            if (input) input.checked = checked;
+            if (input) {
+                input.checked = checked;
+                updateStats();
+            }
+
+            if (
+                pendingToggle &&
+                pendingToggle.index === index &&
+                pendingToggle.checked === checked
+            ) {
+                startCooldown(Date.now() + COOLDOWN_MS);
+                pendingToggle = null;
+                hideAlert();
+            }
         });
 
-        window.addEventListener("load", async () => {
-            const response = await fetch("/checkboxes", { method: "GET" });
-            const data = await response.json();
+        socket.on("server:error", (data) => {
+            pendingToggle = null;
+            showAlert(data.error);
+            if (data.retryAfter) startCooldown(data.retryAfter);
+        });
 
-            if (data && data.checkboxes) {
-                data.checkboxes.forEach((serverValue, index) => {
-                    const input = document.createElement("input");
-                    input.type = "checkbox";
-                    input.id = `checkbox-${index}`;
-                    input.checked = serverValue;
-                    input.addEventListener("change", (event) => {
-                        const checked = event.target.checked;
-                        console.log("Checkbox Changed", { index, checked });
-                        socket.emit("client:checkbox:change", { index, checked });
-                    });
-                    container.appendChild(input);
+        function requestToggle(index, input) {
+            syncCooldownUI();
+
+            if (isOnCooldown()) {
+                showAlert("Please wait before toggling again.");
+                return;
+            }
+
+            const checked = !input.checked;
+            pendingToggle = { index, checked };
+            socket.emit("client:checkbox:change", { index, checked });
+        }
+
+        function buildCheckboxes(checkboxes) {
+            container.innerHTML = "";
+
+            checkboxes.forEach((serverValue, index) => {
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.id = `checkbox-${index}`;
+                input.checked = serverValue;
+                input.title = `Checkbox ${index + 1}`;
+
+                input.addEventListener("change", (event) => {
+                    event.target.checked = !event.target.checked;
+                    requestToggle(index, input);
                 });
+
+                container.appendChild(input);
+            });
+
+            updateStats();
+        }
+
+        window.addEventListener("load", async () => {
+            try {
+                const response = await fetch("/checkboxes", { method: "GET" });
+                const data = await response.json();
+
+                if (data.error) {
+                    showAlert(data.error);
+                    container.innerHTML = '<div class="loading">Failed to load checkboxes.</div>';
+                    return;
+                }
+
+                if (data && data.checkboxes) {
+                    buildCheckboxes(data.checkboxes);
+                }
+            } catch {
+                showAlert("Could not reach the server. Please refresh the page.");
+                container.innerHTML = '<div class="loading">Failed to load checkboxes.</div>';
             }
         });
     </script>

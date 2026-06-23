@@ -7,9 +7,27 @@ import { publisher, subscriber, redis } from "./redis-connection.js";
 
 const CHECKBOX_SIZE = 100;
 const CHECKBOX_STATE_KEY = "checkbox-state";
-const state = {
-  checkboxes: new Array(CHECKBOX_SIZE).fill(false),
-};
+const COOLDOWN_MS = 6 * 1000;
+const RATE_LIMIT_KEY_PREFIX = "rate-limit:";
+
+function isValidClientId(clientId) {
+  return typeof clientId === "string" && /^[0-9a-f-]{36}$/i.test(clientId);
+}
+
+async function getRateLimitRetryAfter(clientId) {
+  const lastOperationTime = Number(await redis.get(`${RATE_LIMIT_KEY_PREFIX}${clientId}`));
+  if (!lastOperationTime) return null;
+
+  const retryAfter = lastOperationTime + COOLDOWN_MS;
+  return Date.now() < retryAfter ? retryAfter : null;
+}
+
+async function setRateLimit(clientId) {
+  await redis.set(`${RATE_LIMIT_KEY_PREFIX}${clientId}`, String(Date.now()), "PX", COOLDOWN_MS);
+}
+// const state = {
+//   checkboxes: new Array(CHECKBOX_SIZE).fill(false),
+// };
 
 async function main() {
   const PORT = process.env.PORT ?? 8010;
@@ -32,9 +50,31 @@ async function main() {
 
   // Socket IO Handler
   io.on("connection", (socket) => {
-    console.log(`Socket connected`, { id: socket.id });
+    const clientId = socket.handshake.auth?.clientId;
+    console.log(`Socket connected`, { id: socket.id, clientId });
+
     socket.on("client:checkbox:change", async (data) => {
       console.log(`[Socket:${socket.id}]:client:checkbox:change`, data);
+
+      if (!isValidClientId(clientId)) {
+        socket.emit("server:error", {
+          index: data.index,
+          error: "Invalid client session. Please refresh the page.",
+        });
+        return;
+      }
+
+      const retryAfter = await getRateLimitRetryAfter(clientId);
+      if (retryAfter) {
+        socket.emit("server:error", {
+          index: data.index,
+          error: "Please wait 6 seconds before toggling again.",
+          retryAfter,
+        });
+        return;
+      }
+
+      await setRateLimit(clientId);
       //! Here we just updating the server but there's a problem that if we scale up horizontally, it will not update the other server which we don't want that
       // const { index, checked } = data;
       // state.checkboxes[index] = checked;
