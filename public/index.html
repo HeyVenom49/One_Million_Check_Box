@@ -20,6 +20,9 @@
             --error-dim: rgba(239, 68, 68, 0.12);
             --error-border: rgba(239, 68, 68, 0.35);
             --radius: 12px;
+            --cell: 28px;
+            --gap: 8px;
+            --row-h: calc(var(--cell) + var(--gap));
         }
 
         * {
@@ -29,18 +32,16 @@
         body {
             min-height: 100vh;
             margin: 0;
-            padding: 32px 16px 48px;
             background: var(--bg);
             color: var(--text);
             font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
         }
 
-        .app {
-            width: min(960px, 100%);
-            margin: 0 auto;
+        .top {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
+            padding: 24px 20px 16px;
         }
 
         header {
@@ -161,24 +162,57 @@
             box-shadow: 0 0 8px var(--error);
         }
 
-        .grid-panel {
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            background: var(--surface);
-            overflow: hidden;
+        .grid-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 14px;
+            padding: 0 20px 12px;
         }
 
-        .grid-hint {
-            padding: 12px 16px;
-            font-size: 0.82rem;
+        .grid-toolbar label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
             color: var(--muted);
-            border-bottom: 1px solid var(--border);
         }
 
-        #scroll-container {
-            height: min(60vh, 520px);
-            overflow: auto;
-            position: relative;
+        .grid-toolbar input[type="number"] {
+            width: 110px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-raised);
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .grid-toolbar button {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-raised);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+        }
+
+        .grid-toolbar button:hover {
+            border-color: var(--accent);
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .grid-toolbar button:active {
+            transform: scale(0.98);
+        }
+
+        #position-label {
+            margin-left: auto;
+            font-size: 0.85rem;
+            font-variant-numeric: tabular-nums;
+            color: var(--muted);
         }
 
         #scroll-spacer {
@@ -191,29 +225,32 @@
             left: 0;
             right: 0;
             top: 0;
-            padding: 12px;
+            padding: 0 20px 48px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: var(--gap);
+            will-change: transform;
         }
 
         .checkbox-row {
             display: grid;
-            grid-template-columns: repeat(100, 1fr);
-            gap: 2px;
-            height: 22px;
+            grid-template-columns: repeat(40, 1fr);
+            gap: var(--gap);
+            height: var(--cell);
         }
 
         input[type="checkbox"] {
             width: 100%;
-            height: 100%;
+            max-width: var(--cell);
+            height: var(--cell);
+            justify-self: center;
             margin: 0;
             appearance: none;
             border: 1px solid var(--border);
-            border-radius: 3px;
+            border-radius: 8px;
             background: var(--surface-raised);
             cursor: pointer;
-            transition: border-color 150ms ease, background 150ms ease;
+            transition: border-color 150ms ease, background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
             position: relative;
         }
 
@@ -223,7 +260,7 @@
             inset: 0;
             display: grid;
             place-items: center;
-            font-size: 0.55rem;
+            font-size: 0.8rem;
             font-weight: 700;
             color: transparent;
             transition: color 150ms ease;
@@ -231,16 +268,18 @@
 
         input[type="checkbox"]:hover:not(:disabled) {
             border-color: var(--accent);
+            transform: scale(1.08);
         }
 
         input[type="checkbox"]:focus-visible {
             outline: 2px solid var(--accent);
-            outline-offset: 1px;
+            outline-offset: 2px;
         }
 
         input[type="checkbox"]:checked {
             border-color: var(--accent);
             background: var(--accent-dim);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
         }
 
         input[type="checkbox"]:checked::after {
@@ -250,9 +289,10 @@
         input[type="checkbox"]:disabled {
             opacity: 0.45;
             cursor: not-allowed;
+            transform: none;
         }
 
-        #scroll-container.cooldown input[type="checkbox"] {
+        body.cooldown input[type="checkbox"] {
             opacity: 0.75;
         }
 
@@ -263,13 +303,6 @@
 
         #cooldown-hint:empty {
             display: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px 0;
-            color: var(--muted);
-            font-size: 0.9rem;
         }
 
         @keyframes slideIn {
@@ -287,10 +320,10 @@
 </head>
 
 <body>
-    <div class="app">
+    <div class="top">
         <header>
             <h1>1 Million Checkboxes</h1>
-            <p>Scroll to explore — only the visible rows are rendered. Changes sync live across all clients.</p>
+            <p>Toggle any box — changes sync live across all connected clients.</p>
         </header>
 
         <div id="alert" role="alert" aria-live="assertive">
@@ -319,16 +352,18 @@
             </div>
         </div>
 
-        <div class="grid-panel">
-            <div class="grid-hint">100 columns × 10,000 rows — scroll to navigate the full grid</div>
-            <div id="scroll-container">
-                <div id="scroll-spacer">
-                    <div id="viewport">
-                        <div class="loading">Loading checkboxes…</div>
-                    </div>
-                </div>
-            </div>
+        <div class="grid-toolbar">
+            <label>
+                Jump to #
+                <input id="jump-input" type="number" min="1" max="1000000" placeholder="500000">
+            </label>
+            <button id="jump-btn" type="button">Go</button>
+            <span id="position-label">Viewing around #1</span>
         </div>
+    </div>
+
+    <div id="scroll-spacer">
+        <div id="viewport"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -337,10 +372,12 @@
         const CLIENT_ID_STORAGE_KEY = "checkbox-client-id";
 
         const CHECKBOX_COUNT = 1_000_000;
-        const COLS = 100;
+        const COLS = 40;
         const ROWS = CHECKBOX_COUNT / COLS;
-        const ROW_HEIGHT = 26;
-        const ROW_BUFFER = 8;
+        const ROW_HEIGHT = 36;
+        const ROW_BUFFER = 6;
+        const CHUNK_SIZE = 2000;
+        const MAX_CACHED_CHUNKS = 40;
         const COOLDOWN_MS = 6000;
 
         function getClientId() {
@@ -353,7 +390,6 @@
         }
 
         const socket = io({ auth: { clientId: getClientId() } });
-        const scrollContainer = document.getElementById("scroll-container");
         const scrollSpacer = document.getElementById("scroll-spacer");
         const viewport = document.getElementById("viewport");
         const alertEl = document.getElementById("alert");
@@ -365,6 +401,9 @@
         const statusDotEl = document.getElementById("status-dot");
         const connectionStatusEl = document.getElementById("connection-status");
         const cooldownHintEl = document.getElementById("cooldown-hint");
+        const positionLabelEl = document.getElementById("position-label");
+        const jumpInputEl = document.getElementById("jump-input");
+        const jumpBtnEl = document.getElementById("jump-btn");
 
         let cooldownUntil = Number(localStorage.getItem(COOLDOWN_STORAGE_KEY)) || 0;
         let pendingToggle = null;
@@ -372,7 +411,9 @@
         let renderedStartRow = -1;
         let renderedEndRow = -1;
         let renderQueued = false;
-        const stateCache = new Map();
+        let loadToken = 0;
+        const chunkCache = new Map();
+        const chunkOrder = [];
 
         totalCountEl.textContent = CHECKBOX_COUNT.toLocaleString();
         scrollSpacer.style.height = `${ROWS * ROW_HEIGHT}px`;
@@ -397,7 +438,6 @@
                 localStorage.setItem(COOLDOWN_STORAGE_KEY, String(cooldownUntil));
                 return;
             }
-
             cooldownUntil = 0;
             localStorage.removeItem(COOLDOWN_STORAGE_KEY);
         }
@@ -407,17 +447,10 @@
                 cooldownUntil = 0;
                 localStorage.removeItem(COOLDOWN_STORAGE_KEY);
             }
-
-            const active = isOnCooldown();
-            scrollContainer.classList.toggle("cooldown", active);
-
-            if (!active) {
-                cooldownHintEl.textContent = "";
-                return;
-            }
-
-            const secondsLeft = Math.ceil((cooldownUntil - Date.now()) / 1000);
-            cooldownHintEl.textContent = ` · wait ${secondsLeft}s`;
+            document.body.classList.toggle("cooldown", isOnCooldown());
+            cooldownHintEl.textContent = isOnCooldown()
+                ? ` · wait ${Math.ceil((cooldownUntil - Date.now()) / 1000)}s`
+                : "";
         }
 
         function startCooldown(retryAfter) {
@@ -438,71 +471,106 @@
             connectionStatusEl.textContent = connected ? "Live" : "Disconnected";
         }
 
-        socket.on("connect", () => setConnectionStatus(true));
-        socket.on("disconnect", () => setConnectionStatus(false));
-
-        function applyCheckboxChange(index, checked) {
-            const previous = stateCache.get(index) ?? false;
-            if (previous !== checked) {
-                checkedCount += checked ? 1 : -1;
-                updateStats();
-            }
-            stateCache.set(index, checked);
-
-            const input = document.getElementById(`checkbox-${index}`);
-            if (input) input.checked = checked;
+        function indexToRowCol(index) {
+            return { row: Math.floor(index / COLS), col: index % COLS };
         }
 
-        socket.on("server:checkbox:change", (data) => {
-            const { index, checked } = data;
-            applyCheckboxChange(index, checked);
+        function rowColToIndex(row, col) {
+            return row * COLS + col;
+        }
 
-            if (
-                pendingToggle &&
-                pendingToggle.index === index &&
-                pendingToggle.checked === checked
-            ) {
-                startCooldown(Date.now() + COOLDOWN_MS);
-                pendingToggle = null;
-                hideAlert();
+        function chunkKeyForIndex(index) {
+            return Math.floor(index / CHUNK_SIZE) * CHUNK_SIZE;
+        }
+
+        function touchChunk(key) {
+            const i = chunkOrder.indexOf(key);
+            if (i !== -1) chunkOrder.splice(i, 1);
+            chunkOrder.push(key);
+            while (chunkOrder.length > MAX_CACHED_CHUNKS) {
+                chunkCache.delete(chunkOrder.shift());
             }
-        });
+        }
 
-        socket.on("server:error", (data) => {
-            pendingToggle = null;
-            showAlert(data.error);
-            if (data.retryAfter) startCooldown(data.retryAfter);
-        });
+        function getCachedValue(index) {
+            const key = chunkKeyForIndex(index);
+            const chunk = chunkCache.get(key);
+            return chunk ? (chunk[index - key] ?? false) : false;
+        }
 
-        function requestToggle(index, input) {
-            syncCooldownUI();
+        function setCachedValue(index, checked) {
+            const key = chunkKeyForIndex(index);
+            const chunk = chunkCache.get(key);
+            if (chunk) chunk[index - key] = checked;
+        }
 
-            if (isOnCooldown()) {
-                showAlert("Please wait before toggling again.");
-                return;
+        async function fetchChunk(chunkStart) {
+            if (chunkCache.has(chunkStart)) {
+                touchChunk(chunkStart);
+                return chunkCache.get(chunkStart);
             }
+            const count = Math.min(CHUNK_SIZE, CHECKBOX_COUNT - chunkStart);
+            const response = await fetch(`/checkboxes?start=${chunkStart}&count=${count}`);
+            const data = await response.json();
+            chunkCache.set(chunkStart, data.checkboxes ?? []);
+            touchChunk(chunkStart);
+            return chunkCache.get(chunkStart);
+        }
 
-            const checked = !input.checked;
-            pendingToggle = { index, checked };
-            socket.emit("client:checkbox:change", { index, checked });
+        async function ensureChunksForRange(startIndex, endIndex) {
+            const first = chunkKeyForIndex(startIndex);
+            const last = chunkKeyForIndex(Math.max(0, endIndex - 1));
+            const token = ++loadToken;
+
+            for (let s = first; s <= last; s += CHUNK_SIZE) {
+                await fetchChunk(s);
+                if (token !== loadToken) return false;
+            }
+            return true;
+        }
+
+        function getGridScrollTop() {
+            const top = scrollSpacer.getBoundingClientRect().top + window.scrollY;
+            return Math.max(0, window.scrollY - top);
         }
 
         function getVisibleRowRange() {
-            const scrollTop = scrollContainer.scrollTop;
-            const viewHeight = scrollContainer.clientHeight;
+            const scrollTop = getGridScrollTop();
+            const viewHeight = window.innerHeight;
             const startRow = Math.floor(scrollTop / ROW_HEIGHT);
             const endRow = Math.ceil((scrollTop + viewHeight) / ROW_HEIGHT);
-
             return {
                 start: Math.max(0, startRow - ROW_BUFFER),
                 end: Math.min(ROWS, endRow + ROW_BUFFER),
             };
         }
 
-        async function fetchCheckboxRange(start, count) {
-            const response = await fetch(`/checkboxes?start=${start}&count=${count}`);
-            const data = await response.json();
-            return data.checkboxes ?? [];
+        function updatePositionLabel(startRow) {
+            const centerIndex = rowColToIndex(startRow + 3, 0);
+            positionLabelEl.textContent = `Viewing around #${(centerIndex + 1).toLocaleString()}`;
+        }
+
+        function requestToggle(index) {
+            syncCooldownUI();
+            if (isOnCooldown()) {
+                showAlert("Please wait before toggling again.");
+                return;
+            }
+            const checked = !getCachedValue(index);
+            pendingToggle = { index, checked };
+            socket.emit("client:checkbox:change", { index, checked });
+        }
+
+        function applyCheckboxChange(index, checked) {
+            const previous = getCachedValue(index);
+            if (previous !== checked) {
+                checkedCount += checked ? 1 : -1;
+                updateStats();
+            }
+            setCachedValue(index, checked);
+
+            const input = viewport.querySelector(`[data-index="${index}"]`);
+            if (input) input.checked = checked;
         }
 
         async function renderVisibleRows() {
@@ -515,64 +583,106 @@
             renderedEndRow = end;
 
             const startIndex = start * COLS;
-            const count = (end - start) * COLS;
-            const values = await fetchCheckboxRange(startIndex, count);
-
-            values.forEach((checked, offset) => {
-                stateCache.set(startIndex + offset, checked);
-            });
+            const endIndex = Math.min(CHECKBOX_COUNT, end * COLS);
+            const ready = await ensureChunksForRange(startIndex, endIndex);
+            if (!ready) return;
 
             viewport.style.transform = `translateY(${start * ROW_HEIGHT}px)`;
-            viewport.replaceChildren();
 
+            const fragment = document.createDocumentFragment();
             for (let row = start; row < end; row++) {
                 const rowEl = document.createElement("div");
                 rowEl.className = "checkbox-row";
 
                 for (let col = 0; col < COLS; col++) {
-                    const index = row * COLS + col;
+                    const index = rowColToIndex(row, col);
                     const input = document.createElement("input");
                     input.type = "checkbox";
-                    input.id = `checkbox-${index}`;
-                    input.checked = stateCache.get(index) ?? false;
-                    input.title = `Checkbox ${index + 1}`;
-
-                    input.addEventListener("change", (event) => {
-                        event.target.checked = !event.target.checked;
-                        requestToggle(index, input);
-                    });
-
+                    input.dataset.index = String(index);
+                    input.checked = getCachedValue(index);
+                    input.title = `#${(index + 1).toLocaleString()}`;
                     rowEl.appendChild(input);
                 }
-
-                viewport.appendChild(rowEl);
+                fragment.appendChild(rowEl);
             }
+
+            viewport.replaceChildren(fragment);
+            updatePositionLabel(start);
         }
 
         function queueRender() {
             if (renderQueued) return;
             renderQueued = true;
             requestAnimationFrame(() => {
-                renderVisibleRows().catch(() => {
-                    showAlert("Failed to load checkboxes for this section.");
-                });
+                renderVisibleRows().catch(() => showAlert("Failed to load this section."));
             });
         }
 
-        scrollContainer.addEventListener("scroll", queueRender, { passive: true });
-        window.addEventListener("resize", queueRender);
+        function scrollToIndex(index) {
+            const clamped = Math.max(0, Math.min(CHECKBOX_COUNT - 1, index));
+            const { row } = indexToRowCol(clamped);
+            const gridTop = scrollSpacer.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: gridTop + row * ROW_HEIGHT - ROW_HEIGHT * 2, behavior: "smooth" });
+            renderedStartRow = -1;
+            renderedEndRow = -1;
+            queueRender();
+        }
+
+        viewport.addEventListener("change", (event) => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement) || input.type !== "checkbox") return;
+
+            input.checked = !input.checked;
+            requestToggle(Number(input.dataset.index));
+        });
+
+        socket.on("connect", () => setConnectionStatus(true));
+        socket.on("disconnect", () => setConnectionStatus(false));
+
+        socket.on("server:checkbox:change", ({ index, checked }) => {
+            applyCheckboxChange(index, checked);
+            if (pendingToggle?.index === index && pendingToggle.checked === checked) {
+                startCooldown(Date.now() + COOLDOWN_MS);
+                pendingToggle = null;
+                hideAlert();
+            }
+        });
+
+        socket.on("server:error", (data) => {
+            pendingToggle = null;
+            showAlert(data.error);
+            if (data.retryAfter) startCooldown(data.retryAfter);
+        });
+
+        window.addEventListener("scroll", queueRender, { passive: true });
+        window.addEventListener("resize", () => {
+            renderedStartRow = -1;
+            renderedEndRow = -1;
+            queueRender();
+        });
+
+        jumpBtnEl.addEventListener("click", () => {
+            const value = Number(jumpInputEl.value);
+            if (!Number.isInteger(value) || value < 1 || value > CHECKBOX_COUNT) {
+                showAlert(`Enter a number between 1 and ${CHECKBOX_COUNT.toLocaleString()}.`);
+                return;
+            }
+            hideAlert();
+            scrollToIndex(value - 1);
+        });
+
+        jumpInputEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") jumpBtnEl.click();
+        });
 
         window.addEventListener("load", async () => {
             try {
-                const statsResponse = await fetch("/checkboxes/stats");
-                const stats = await statsResponse.json();
+                const stats = await (await fetch("/checkboxes/stats")).json();
                 checkedCount = stats.checked ?? 0;
                 updateStats();
-
                 await renderVisibleRows();
             } catch {
                 showAlert("Could not reach the server. Please refresh the page.");
-                viewport.innerHTML = '<div class="loading">Failed to load checkboxes.</div>';
             }
         });
     </script>
